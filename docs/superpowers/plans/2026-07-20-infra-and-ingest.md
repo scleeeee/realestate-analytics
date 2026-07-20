@@ -325,7 +325,7 @@ git commit -m "feat: add partitioned real_estate_transaction schema via Flyway"
 - Create: `ingest/src/main/java/com/realestate/ingest/client/MolitApiClient.java`
 - Create: `ingest/src/test/java/com/realestate/ingest/client/FakeMolitApiClient.java`
 
-- [ ] **Step 1: Create the DTO and interface**
+- [x] **Step 1: Create the DTO and interface**
 
 `ingest/src/main/java/com/realestate/ingest/client/AptTradeItem.java`:
 ```java
@@ -356,7 +356,7 @@ public interface MolitApiClient {
 }
 ```
 
-- [ ] **Step 2: Create the fake test double**
+- [x] **Step 2: Create the fake test double**
 
 `ingest/src/test/java/com/realestate/ingest/client/FakeMolitApiClient.java`:
 ```java
@@ -381,17 +381,19 @@ public class FakeMolitApiClient implements MolitApiClient {
 }
 ```
 
-- [ ] **Step 3: Compile to verify no errors**
+- [x] **Step 3: Compile to verify no errors**
 
 Run: `./gradlew :ingest:compileJava :ingest:compileTestJava`
 Expected: `BUILD SUCCESSFUL`
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add ingest/src/main/java/com/realestate/ingest/client ingest/src/test/java/com/realestate/ingest/client
 git commit -m "feat: add MolitApiClient interface, AptTradeItem DTO, and fake test double"
 ```
+
+Commits: `87e1f30`
 
 ---
 
