@@ -7,14 +7,14 @@ services:
       MARIADB_USER: realestate
       MARIADB_PASSWORD: realestate
     ports:
-      - "3306:3306"
+      - "13306:3306"
     volumes:
       - mariadb-data:/var/lib/mysql
 
   redis:
     image: redis:7.4
     ports:
-      - "6379:6379"
+      - "16379:6379"
 
 volumes:
   mariadb-data:
