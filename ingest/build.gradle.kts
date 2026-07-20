@@ -19,4 +19,5 @@ dependencies {
     testImplementation("org.springframework.batch:spring-batch-test")
     testImplementation("org.testcontainers:testcontainers-junit-jupiter:2.0.5")
     testImplementation("org.testcontainers:testcontainers-mariadb:2.0.5")
+    testImplementation("org.mariadb.jdbc:mariadb-java-client")
 }
