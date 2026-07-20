@@ -393,7 +393,7 @@ git add ingest/src/main/java/com/realestate/ingest/client ingest/src/test/java/c
 git commit -m "feat: add MolitApiClient interface, AptTradeItem DTO, and fake test double"
 ```
 
-Commits: `87e1f30`
+Commits: `7938036`
 
 ---
 
