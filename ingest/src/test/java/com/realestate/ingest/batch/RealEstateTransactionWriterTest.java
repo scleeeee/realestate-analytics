@@ -58,4 +58,27 @@ class RealEstateTransactionWriterTest {
             "SELECT apt_name FROM real_estate_transaction WHERE deal_ym = 202307", String.class);
         assertThat(aptName).isEqualTo("테스트아파트");
     }
+
+    @Test
+    void writesChunkWithNullFloorAndBuildYear() {
+        var writer = new RealEstateTransactionWriter(new JdbcTemplate(dataSource));
+        var tx = new RealEstateTransaction(
+            "11110", "종로구", "테스트아파트2", 59.8, 70000,
+            2023, 8, 10, 202308, null, null);
+
+        writer.write(new Chunk<>(List.of(tx)));
+
+        var jdbcTemplate = new JdbcTemplate(dataSource);
+        Integer count = jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM real_estate_transaction WHERE deal_ym = 202308", Integer.class);
+        assertThat(count).isEqualTo(1);
+
+        Integer floor = jdbcTemplate.queryForObject(
+            "SELECT floor FROM real_estate_transaction WHERE deal_ym = 202308", Integer.class);
+        assertThat(floor).isNull();
+
+        Integer buildYear = jdbcTemplate.queryForObject(
+            "SELECT build_year FROM real_estate_transaction WHERE deal_ym = 202308", Integer.class);
+        assertThat(buildYear).isNull();
+    }
 }
