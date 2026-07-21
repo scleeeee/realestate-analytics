@@ -4,3 +4,4 @@ plugins {
 
 rootProject.name = "realestate-analytics"
 include("ingest")
+include("api")
