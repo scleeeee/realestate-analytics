@@ -55,4 +55,11 @@ class TransactionSearchControllerTest {
             .andExpect(jsonPath("$.items[0].aptName").value("테스트아파트"))
             .andExpect(jsonPath("$.nextCursor").doesNotExist());
     }
+
+    @Test
+    void returnsBadRequestForMalformedCursor() throws Exception {
+        mockMvc.perform(get("/api/transactions").param("cursor", "not-valid-base64!!"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").exists());
+    }
 }
