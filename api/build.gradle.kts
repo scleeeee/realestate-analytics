@@ -4,6 +4,8 @@ plugins {
     java
 }
 
+ext["testcontainers.version"] = "2.0.5"
+
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
