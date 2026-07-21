@@ -72,6 +72,21 @@ class RealEstateTransactionQueryRepositoryTest {
             .containsExactly("B", "A");
     }
 
+    @Test
+    void aggregatesAveragePriceAndCountForRegionAndMonth() {
+        RegionStats stats = queryRepository.statsFor("11110", 202307);
+
+        assertThat(stats.count()).isEqualTo(1);
+        assertThat(stats.avgDealAmount()).isEqualByComparingTo(java.math.BigDecimal.valueOf(75000));
+    }
+
+    @Test
+    void returnsZeroCountWhenNoDataForRegionAndMonth() {
+        RegionStats stats = queryRepository.statsFor("11110", 202312);
+
+        assertThat(stats.count()).isZero();
+    }
+
     private Long idOf(String aptName) {
         return jdbcTemplate.queryForObject(
             "SELECT id FROM real_estate_transaction WHERE apt_name = ?", Long.class, aptName);

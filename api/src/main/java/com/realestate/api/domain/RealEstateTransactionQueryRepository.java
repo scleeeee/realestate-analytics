@@ -4,4 +4,6 @@ import java.util.List;
 
 public interface RealEstateTransactionQueryRepository {
     List<RealEstateTransaction> search(TransactionSearchCondition condition, TransactionCursor cursor, int size);
+
+    RegionStats statsFor(String regionCode, int dealYm);
 }

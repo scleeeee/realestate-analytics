@@ -4,6 +4,7 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static com.realestate.api.domain.QRealEstateTransaction.realEstateTransaction;
@@ -48,5 +49,22 @@ public class RealEstateTransactionQueryRepositoryImpl implements RealEstateTrans
             .orderBy(q.dealYm.desc(), q.id.desc())
             .limit(size)
             .fetch();
+    }
+
+    @Override
+    public RegionStats statsFor(String regionCode, int dealYm) {
+        var q = realEstateTransaction;
+        Long count = queryFactory.select(q.count())
+            .from(q)
+            .where(q.regionCode.eq(regionCode), q.dealYm.eq(dealYm))
+            .fetchOne();
+        Double avg = queryFactory.select(q.dealAmount.avg())
+            .from(q)
+            .where(q.regionCode.eq(regionCode), q.dealYm.eq(dealYm))
+            .fetchOne();
+
+        long safeCount = count != null ? count : 0L;
+        BigDecimal safeAvg = (avg != null) ? BigDecimal.valueOf(avg) : BigDecimal.ZERO;
+        return new RegionStats(safeCount, safeAvg);
     }
 }
