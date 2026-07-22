@@ -10,6 +10,12 @@ export async function runPaginationScenario(pool, deepOffset = 4_000_000) {
     [deepOffset],
   );
   const deepRow = rows[0];
+  if (!deepRow) {
+    throw new Error(
+      `No row at offset ${deepOffset} — the table has fewer rows than that. ` +
+      'Pass a smaller deep-offset argument to run-benchmark.js.',
+    );
+  }
   const cursor = encodeCursor(deepRow.deal_ym, deepRow.id);
   const deepPage = Math.floor(deepOffset / PAGE_SIZE);
 
