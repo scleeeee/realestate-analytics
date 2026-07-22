@@ -57,11 +57,11 @@ public class MolitApiClientImpl implements MolitApiClient {
             regionCode,
             item.umdNm().trim(),
             item.aptNm().trim(),
-            Double.parseDouble(item.excluUseAr()),
+            Double.parseDouble(item.excluUseAr().trim()),
             dealAmount,
-            Integer.parseInt(item.dealYear()),
-            Integer.parseInt(item.dealMonth()),
-            Integer.parseInt(item.dealDay()),
+            Integer.parseInt(item.dealYear().trim()),
+            Integer.parseInt(item.dealMonth().trim()),
+            Integer.parseInt(item.dealDay().trim()),
             item.floor() == null || item.floor().isBlank() ? null : Integer.parseInt(item.floor().trim()),
             item.buildYear() == null || item.buildYear().isBlank() ? null : Integer.parseInt(item.buildYear().trim())
         );

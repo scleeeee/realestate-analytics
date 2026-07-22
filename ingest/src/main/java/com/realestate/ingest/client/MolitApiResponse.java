@@ -9,11 +9,15 @@ import java.util.List;
 @JsonRootName("response")
 public record MolitApiResponse(Body body) {
 
-    public record Body(
+    public static class Body {
         @JacksonXmlElementWrapper(localName = "items")
         @JacksonXmlProperty(localName = "item")
-        List<MolitApiItem> items
-    ) {}
+        private List<MolitApiItem> items;
+
+        public List<MolitApiItem> items() {
+            return items;
+        }
+    }
 
     public record MolitApiItem(
         String umdNm,
