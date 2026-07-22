@@ -75,15 +75,14 @@ public class RealEstateTransactionQueryRepositoryImpl implements RealEstateTrans
     @Override
     public RegionStats statsFor(String regionCode, int dealYm) {
         var q = realEstateTransaction;
-        Long count = queryFactory.select(q.count())
-            .from(q)
-            .where(q.regionCode.eq(regionCode), q.dealYm.eq(dealYm))
-            .fetchOne();
-        Double avg = queryFactory.select(q.dealAmount.avg())
+        Tuple row = queryFactory
+            .select(q.count(), q.dealAmount.avg())
             .from(q)
             .where(q.regionCode.eq(regionCode), q.dealYm.eq(dealYm))
             .fetchOne();
 
+        Long count = row.get(q.count());
+        Double avg = row.get(q.dealAmount.avg());
         long safeCount = count != null ? count : 0L;
         BigDecimal safeAvg = (avg != null) ? BigDecimal.valueOf(avg) : BigDecimal.ZERO;
         return new RegionStats(safeCount, safeAvg);
