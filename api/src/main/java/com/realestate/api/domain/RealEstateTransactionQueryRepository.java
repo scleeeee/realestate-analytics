@@ -6,4 +6,6 @@ public interface RealEstateTransactionQueryRepository {
     List<RealEstateTransaction> search(TransactionSearchCondition condition, TransactionCursor cursor, int size);
 
     RegionStats statsFor(String regionCode, int dealYm);
+
+    List<RegionMonthStats> statsForRange(String regionCode, int dealYmFrom, int dealYmTo);
 }

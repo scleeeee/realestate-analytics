@@ -87,6 +87,24 @@ class RealEstateTransactionQueryRepositoryTest {
         assertThat(stats.count()).isZero();
     }
 
+    @Test
+    void aggregatesMonthlyStatsAcrossRange() {
+        List<RegionMonthStats> monthly = queryRepository.statsForRange("11110", 202305, 202307);
+
+        assertThat(monthly).extracting(RegionMonthStats::dealYm)
+            .containsExactly(202305, 202306, 202307);
+        assertThat(monthly).extracting(RegionMonthStats::count)
+            .containsExactly(1L, 1L, 1L);
+    }
+
+    @Test
+    void excludesMonthsOutsideTheRequestedRange() {
+        List<RegionMonthStats> monthly = queryRepository.statsForRange("11110", 202306, 202307);
+
+        assertThat(monthly).extracting(RegionMonthStats::dealYm)
+            .containsExactly(202306, 202307);
+    }
+
     private Long idOf(String aptName) {
         return jdbcTemplate.queryForObject(
             "SELECT id FROM real_estate_transaction WHERE apt_name = ?", Long.class, aptName);

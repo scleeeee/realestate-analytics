@@ -1,6 +1,7 @@
 package com.realestate.api.domain;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 
@@ -66,5 +67,27 @@ public class RealEstateTransactionQueryRepositoryImpl implements RealEstateTrans
         long safeCount = count != null ? count : 0L;
         BigDecimal safeAvg = (avg != null) ? BigDecimal.valueOf(avg) : BigDecimal.ZERO;
         return new RegionStats(safeCount, safeAvg);
+    }
+
+    @Override
+    public List<RegionMonthStats> statsForRange(String regionCode, int dealYmFrom, int dealYmTo) {
+        var q = realEstateTransaction;
+        List<Tuple> rows = queryFactory
+            .select(q.dealYm, q.count(), q.dealAmount.avg())
+            .from(q)
+            .where(q.regionCode.eq(regionCode), q.dealYm.between(dealYmFrom, dealYmTo))
+            .groupBy(q.dealYm)
+            .orderBy(q.dealYm.asc())
+            .fetch();
+
+        return rows.stream()
+            .map(row -> {
+                Integer dealYm = row.get(q.dealYm);
+                Long count = row.get(q.count());
+                Double avg = row.get(q.dealAmount.avg());
+                BigDecimal safeAvg = (avg != null) ? BigDecimal.valueOf(avg) : BigDecimal.ZERO;
+                return new RegionMonthStats(dealYm, count != null ? count : 0L, safeAvg);
+            })
+            .toList();
     }
 }

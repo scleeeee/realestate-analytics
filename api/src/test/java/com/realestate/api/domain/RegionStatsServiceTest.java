@@ -13,6 +13,8 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Testcontainers
@@ -62,5 +64,28 @@ class RegionStatsServiceTest {
 
         assertThat(first.count()).isEqualTo(1);
         assertThat(second.count()).isEqualTo(1); // still 1 — cached, not re-queried
+    }
+
+    @Test
+    void cachesRangeStatsAcrossRepeatedCalls() {
+        // Uses deal_ym 202308 (not 202307, which seed() and cachesStatsAcrossRepeatedCalls
+        // both write to) so this test stays self-contained regardless of method execution
+        // order — RegionStatsServiceTest shares one Testcontainers DB across all @Test
+        // methods with no cleanup between them.
+        jdbcTemplate.update("""
+            INSERT INTO real_estate_transaction
+                (region_code, legal_dong, apt_name, exclusive_area, deal_amount, deal_year, deal_month, deal_day, deal_ym)
+            VALUES ('11110', '종로구', 'X', 59.8, 60000, 2023, 8, 1, 202308)
+            """);
+        List<RegionMonthStats> first = regionStatsService.getStatsRange("11110", 202308, 202308);
+        jdbcTemplate.update("""
+            INSERT INTO real_estate_transaction
+                (region_code, legal_dong, apt_name, exclusive_area, deal_amount, deal_year, deal_month, deal_day, deal_ym)
+            VALUES ('11110', '종로구', 'Y', 59.8, 60000, 2023, 8, 2, 202308)
+            """);
+        List<RegionMonthStats> second = regionStatsService.getStatsRange("11110", 202308, 202308);
+
+        assertThat(first.get(0).count()).isEqualTo(1);
+        assertThat(second.get(0).count()).isEqualTo(1); // still 1 — cached, not re-queried
     }
 }
