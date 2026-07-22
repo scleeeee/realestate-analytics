@@ -672,12 +672,14 @@ export function buildMarkdownReport(sections) {
 }
 
 export function writeReport(markdown) {
-  mkdirSync('benchmark/results', { recursive: true });
-  const path = `benchmark/results/${new Date().toISOString().slice(0, 10)}-results.md`;
+  mkdirSync('results', { recursive: true });
+  const path = `results/${new Date().toISOString().slice(0, 10)}-results.md`;
   writeFileSync(path, markdown);
   return path;
 }
 ```
+
+**Note for implementer:** the path is relative to `results/`, not `benchmark/results/` — scripts already run with their cwd inside `benchmark/` (per Task 2's `cd .worktrees/benchmark/benchmark`), so prefixing `benchmark/` here would create a nested `benchmark/benchmark/results/` directory instead.
 
 - [ ] **Step 2: Write the orchestrator**
 
@@ -689,6 +691,8 @@ import { runPartitionScenario } from './scenarios/partition-on-off.js';
 import { runPaginationScenario } from './scenarios/offset-vs-keyset.js';
 import { buildMarkdownReport, writeReport } from './report.js';
 
+const DEEP_OFFSET = Number(process.argv[2] ?? 4_000_000);
+
 async function main() {
   const pool = createPool();
 
@@ -698,8 +702,8 @@ async function main() {
   console.log('Running partition on/off scenario...');
   const partitionRows = await runPartitionScenario(pool);
 
-  console.log('Running offset vs keyset scenario...');
-  const paginationRows = await runPaginationScenario(pool);
+  console.log(`Running offset vs keyset scenario (deep offset: ${DEEP_OFFSET.toLocaleString()})...`);
+  const paginationRows = await runPaginationScenario(pool, DEEP_OFFSET);
 
   const markdown = buildMarkdownReport([
     { title: '인덱스 유무', rows: indexRows },
@@ -720,8 +724,8 @@ main().catch((err) => {
 
 - [ ] **Step 3: Verify against the small seeded dataset**
 
-Run: `node run-benchmark.js`
-Expected: three "Running ... scenario..." log lines, then "Report written to benchmark/results/<today>-results.md". Open that file and confirm it has three `##` sections each with a populated table.
+Run: `node run-benchmark.js 500` (pass a deep offset that actually exists in the ~1,000-row seed — the default 4,000,000 only makes sense against the real 5M-row dataset in Task 9, and will crash with `Cannot read properties of undefined (reading 'deal_ym')` against a smaller table)
+Expected: three "Running ... scenario..." log lines, then "Report written to results/<today>-results.md". Open that file and confirm it has three `##` sections each with a populated table.
 
 - [ ] **Step 4: Commit**
 
