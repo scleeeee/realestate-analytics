@@ -44,4 +44,19 @@ public class TransactionSearchController {
 
         return new TransactionSearchResponse(page.stream().map(TransactionResponse::from).toList(), nextCursor);
     }
+
+    @GetMapping("/api/transactions/offset")
+    public TransactionOffsetSearchResponse searchByOffset(
+            @RequestParam(required = false) String regionCode,
+            @RequestParam(required = false) Integer dealYmFrom,
+            @RequestParam(required = false) Integer dealYmTo,
+            @RequestParam(required = false) BigDecimal minArea,
+            @RequestParam(required = false) BigDecimal maxArea,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        var condition = new TransactionSearchCondition(regionCode, dealYmFrom, dealYmTo, minArea, maxArea);
+        List<RealEstateTransaction> results = repository.searchByOffset(condition, page, size);
+        return new TransactionOffsetSearchResponse(results.stream().map(TransactionResponse::from).toList(), page, size);
+    }
 }

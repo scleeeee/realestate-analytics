@@ -62,4 +62,23 @@ class TransactionSearchControllerTest {
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.message").exists());
     }
+
+    @Test
+    void offsetSearchReturnsRequestedPage() throws Exception {
+        jdbcTemplate.update("""
+            INSERT INTO real_estate_transaction
+                (region_code, legal_dong, apt_name, exclusive_area, deal_amount, deal_year, deal_month, deal_day, deal_ym)
+            VALUES ('11110', '종로구', '두번째아파트', 59.8, 70000, 2023, 7, 2, 202307)
+            """);
+
+        mockMvc.perform(get("/api/transactions/offset").param("regionCode", "11110").param("page", "0").param("size", "1"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[0].aptName").value("두번째아파트"))
+            .andExpect(jsonPath("$.page").value(0))
+            .andExpect(jsonPath("$.size").value(1));
+
+        mockMvc.perform(get("/api/transactions/offset").param("regionCode", "11110").param("page", "1").param("size", "1"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[0].aptName").value("테스트아파트"));
+    }
 }

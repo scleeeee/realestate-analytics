@@ -105,6 +105,17 @@ class RealEstateTransactionQueryRepositoryTest {
             .containsExactly(202306, 202307);
     }
 
+    @Test
+    void appliesOffsetToSkipEarlierPages() {
+        var condition = new TransactionSearchCondition("11110", null, null, null, null);
+
+        List<RealEstateTransaction> firstPage = queryRepository.searchByOffset(condition, 0, 2);
+        List<RealEstateTransaction> secondPage = queryRepository.searchByOffset(condition, 1, 2);
+
+        assertThat(firstPage).extracting(RealEstateTransaction::getAptName).containsExactly("C", "B");
+        assertThat(secondPage).extracting(RealEstateTransaction::getAptName).containsExactly("A");
+    }
+
     private Long idOf(String aptName) {
         return jdbcTemplate.queryForObject(
             "SELECT id FROM real_estate_transaction WHERE apt_name = ?", Long.class, aptName);

@@ -21,6 +21,37 @@ public class RealEstateTransactionQueryRepositoryImpl implements RealEstateTrans
     @Override
     public List<RealEstateTransaction> search(TransactionSearchCondition condition, TransactionCursor cursor, int size) {
         var q = realEstateTransaction;
+        var predicate = buildPredicate(condition);
+
+        if (cursor != null) {
+            predicate.and(
+                q.dealYm.lt(cursor.dealYm())
+                    .or(q.dealYm.eq(cursor.dealYm()).and(q.id.lt(cursor.id())))
+            );
+        }
+
+        return queryFactory.selectFrom(q)
+            .where(predicate)
+            .orderBy(q.dealYm.desc(), q.id.desc())
+            .limit(size)
+            .fetch();
+    }
+
+    @Override
+    public List<RealEstateTransaction> searchByOffset(TransactionSearchCondition condition, int page, int size) {
+        var q = realEstateTransaction;
+        var predicate = buildPredicate(condition);
+
+        return queryFactory.selectFrom(q)
+            .where(predicate)
+            .orderBy(q.dealYm.desc(), q.id.desc())
+            .offset((long) page * size)
+            .limit(size)
+            .fetch();
+    }
+
+    private BooleanBuilder buildPredicate(TransactionSearchCondition condition) {
+        var q = realEstateTransaction;
         var predicate = new BooleanBuilder();
 
         if (condition.regionCode() != null) {
@@ -38,18 +69,7 @@ public class RealEstateTransactionQueryRepositoryImpl implements RealEstateTrans
         if (condition.maxArea() != null) {
             predicate.and(q.exclusiveArea.loe(condition.maxArea()));
         }
-        if (cursor != null) {
-            predicate.and(
-                q.dealYm.lt(cursor.dealYm())
-                    .or(q.dealYm.eq(cursor.dealYm()).and(q.id.lt(cursor.id())))
-            );
-        }
-
-        return queryFactory.selectFrom(q)
-            .where(predicate)
-            .orderBy(q.dealYm.desc(), q.id.desc())
-            .limit(size)
-            .fetch();
+        return predicate;
     }
 
     @Override
