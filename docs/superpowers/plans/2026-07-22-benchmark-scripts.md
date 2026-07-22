@@ -532,7 +532,7 @@ Expected: an array of two `{ scenario, p50, p95, avg, samples }` objects. At 1,0
 ```bash
 node -e "import('./db.js').then(async ({createPool}) => { const p = createPool(); const [rows] = await p.query(\"SHOW INDEX FROM real_estate_transaction WHERE Key_name = 'idx_region_ym'\"); console.log(rows.length); await p.end(); })"
 ```
-Expected: `1` (index exists)
+Expected: `2` (`idx_region_ym` is a composite index on `region_code, deal_ym` — `SHOW INDEX` returns one row per column, not one row per index)
 
 - [ ] **Step 3: Commit**
 
