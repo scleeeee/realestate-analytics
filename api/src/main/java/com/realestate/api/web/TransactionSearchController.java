@@ -14,6 +14,8 @@ import java.util.List;
 @RestController
 public class TransactionSearchController {
 
+    private static final int MAX_PAGE_SIZE = 100;
+
     private final RealEstateTransactionRepository repository;
 
     public TransactionSearchController(RealEstateTransactionRepository repository) {
@@ -30,6 +32,7 @@ public class TransactionSearchController {
             @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "20") int size) {
 
+        validateSize(size);
         var condition = new TransactionSearchCondition(regionCode, dealYmFrom, dealYmTo, minArea, maxArea);
         var decodedCursor = cursor != null ? TransactionCursor.decode(cursor) : null;
 
@@ -55,8 +58,18 @@ public class TransactionSearchController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
+        if (page < 0) {
+            throw new IllegalArgumentException("page must not be negative: " + page);
+        }
+        validateSize(size);
         var condition = new TransactionSearchCondition(regionCode, dealYmFrom, dealYmTo, minArea, maxArea);
         List<RealEstateTransaction> results = repository.searchByOffset(condition, page, size);
         return new TransactionOffsetSearchResponse(results.stream().map(TransactionResponse::from).toList(), page, size);
+    }
+
+    private void validateSize(int size) {
+        if (size < 1 || size > MAX_PAGE_SIZE) {
+            throw new IllegalArgumentException("size must be between 1 and " + MAX_PAGE_SIZE + ": " + size);
+        }
     }
 }

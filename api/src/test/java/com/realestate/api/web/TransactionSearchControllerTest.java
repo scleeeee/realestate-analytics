@@ -40,6 +40,7 @@ class TransactionSearchControllerTest {
 
     @BeforeEach
     void seed() {
+        jdbcTemplate.update("DELETE FROM real_estate_transaction");
         jdbcTemplate.update("""
             INSERT INTO real_estate_transaction
                 (region_code, legal_dong, apt_name, exclusive_area, deal_amount, deal_year, deal_month, deal_day, deal_ym)
@@ -80,5 +81,39 @@ class TransactionSearchControllerTest {
         mockMvc.perform(get("/api/transactions/offset").param("regionCode", "11110").param("page", "1").param("size", "1"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[0].aptName").value("테스트아파트"));
+    }
+
+    @Test
+    void rejectsNonPositiveSizeOnCursorSearch() throws Exception {
+        mockMvc.perform(get("/api/transactions").param("size", "0"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").exists());
+    }
+
+    @Test
+    void rejectsSizeAboveTheUpperBoundOnCursorSearch() throws Exception {
+        mockMvc.perform(get("/api/transactions").param("size", "101"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").exists());
+    }
+
+    @Test
+    void rejectsNegativePageOnOffsetSearch() throws Exception {
+        mockMvc.perform(get("/api/transactions/offset").param("page", "-1"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").exists());
+    }
+
+    @Test
+    void rejectsNonPositiveSizeOnOffsetSearch() throws Exception {
+        mockMvc.perform(get("/api/transactions/offset").param("size", "0"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").exists());
+    }
+
+    @Test
+    void allowsADeepPageOnOffsetSearchAsLongAsSizeIsWithinBounds() throws Exception {
+        mockMvc.perform(get("/api/transactions/offset").param("page", "200000").param("size", "20"))
+            .andExpect(status().isOk());
     }
 }
