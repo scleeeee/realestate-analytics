@@ -38,13 +38,13 @@
 계약연월, 지역코드, 평형, 거래금액 등을 포함하며 파티션 키(계약연월)를 포함한다.
 
 ### 검색/집계 API (api)
-QueryDSL 동적 쿼리로 지역+기간+평형 조합 검색을 지원한다. 목록 조회는 keyset(seek) pagination을 사용한다. 지역별 평균가·거래량 집계는 Redis에 TTL 기반으로 캐싱한다. 단일 월 통계(`/stats`)에 더해, web의 시세추이 차트를 위한 기간 범위 통계(`/stats/range`)도 제공한다.
+QueryDSL 동적 쿼리로 지역+기간+평형 조합 검색을 지원한다. 목록 조회는 keyset(seek) pagination을 사용한다. 지역별 평균가·거래량 집계는 Redis에 TTL 기반으로 캐싱한다. 단일 월 통계(`/stats`)에 더해, web의 시세추이 차트를 위한 기간 범위 통계(`/stats/range`)도 제공한다. 벤치마크의 offset vs keyset 비교를 위해 offset 기반 목록 조회 엔드포인트도 별도로 제공한다.
 
 ### 검색 화면 + 시세추이 차트 (web)
 React(Vite) SPA. 검색 페이지(지역/기간/평형 조건 + keyset 페이지네이션 거래내역 리스트)와 지역 상세 페이지(선택 지역의 월별 시세추이 차트)로 구성한다. 지역 코드는 행정안전부 법정동코드 전체자료를 정적 파일(`region-codes.json`)로 번들해 이름 기반 드롭다운 검색을 지원한다 — 별도 지역 마스터 API는 만들지 않는다.
 
 ### 벤치마크 (`/benchmark`)
-별도 모듈이 아니라 반복 측정용 스크립트(JMeter 또는 단순 반복 호출 스크립트)로 구성한다. 인덱스 유무, 파티션 유무, offset vs keyset pagination을 각각 on/off 스위치로 비교 측정하고, 결과를 표로 README/블로그 포스트에 정리한다.
+별도 Gradle 모듈이 아니라 Node.js 스크립트(`mysql2`로 MariaDB 직결, 내장 `fetch`로 api 호출)로 구성한다. `generate-seed-data.js`가 지역 25개 × 기간에 걸쳐 500만 건의 합성 데이터를 batched INSERT로 생성한다 — 이 환경에는 국토부 API 실키가 없어 실제 대용량 적재로는 벤치마크 규모를 만들 수 없기 때문이다. 세 가지 시나리오(인덱스 유무, 파티션 유무, offset vs keyset)를 각각 DDL로 직접 켜고 끄며 같은 `/api/transactions` 계열 엔드포인트를 반복 호출해 p50/p95/평균 응답시간을 측정하고, 시나리오가 끝나면 인덱스/파티션을 원상복구한다. 결과는 `benchmark/results/`에 마크다운 표로 자동 출력한다.
 
 ## 데이터 흐름
 1. ingest Job이 국토부 API에서 원본 데이터를 받아 chunk 단위로 검증/변환한다.
@@ -61,6 +61,7 @@ React(Vite) SPA. 검색 페이지(지역/기간/평형 조건 + keyset 페이지
 | 페이지네이션 | Keyset(seek) pagination | offset과의 실측 비교(딥페이지 성능 저하)가 벤치마크 스토리의 핵심 |
 | 캐싱 | Redis, TTL 기반 | 지역별 평균가/거래량 추이 등 무거운 집계만 캐싱 |
 | 프론트엔드 프레임워크 | Vue3 → React로 변경 | 프론트는 결과 표시용 최소 화면이라 포트폴리오 셀링포인트(백엔드 성능 튜닝)에 영향 없음. 학습 목적으로 React 채택 |
+| 벤치마크 데이터 소스 | SQL/JDBC 합성 데이터 생성 스크립트 (500만 건) | 개발 환경에 국토부 API 실키가 없어 실제 ingest로는 벤치마크 규모(수백만 건)를 만들 수 없음. 지역·기간 분포를 흉내낸 합성 데이터로 대체 |
 
 ## 에러 처리
 - 배치: chunk 커밋 단위 관리로 Step 실패 시 실패 지점부터 재시작 가능. 국토부 API 호출 실패(rate limit 등)는 재시도 후 스킵.
@@ -71,7 +72,7 @@ React(Vite) SPA. 검색 페이지(지역/기간/평형 조건 + keyset 페이지
 - ingest: Step 단위 테스트(테스트용 소량 데이터로 chunk 로직 검증)
 - api: Testcontainers로 실제 MariaDB를 띄운 통합테스트 (파티션/인덱스 동작 검증에는 H2로 부족)
 - web: Vitest + Testing Library로 API 호출 hooks(`useTransactionSearch`, `useRegionStats`)와 핵심 컴포넌트 단위/컴포넌트 테스트
-- 벤치마크는 테스트가 아니라 수동/스크립트 실행 결과를 문서화하는 방식으로 다룬다.
+- 벤치마크는 테스트가 아니라 수동/스크립트 실행 결과를 문서화하는 방식으로 다룬다 — 각 시나리오는 워밍업 후 순차 반복 호출로 p50/p95/평균을 측정하는 단순 스크립트이지 부하테스트가 아니다.
 
 ## 범위 밖 (Out of scope)
 - 로그인/인증, 사용자별 즐겨찾기 등 사용자 기능
