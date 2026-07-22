@@ -1,0 +1,29 @@
+spring:
+  datasource:
+    url: jdbc:mariadb://localhost:13306/realestate
+    username: realestate
+    password: realestate
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      # MariaDB isn't "embedded", so Boot's default (embedded-only) skips creating
+      # BATCH_JOB_*/BATCH_STEP_* tables here. "always" re-runs schema-mysql.sql on
+      # every startup; Spring Batch's initializer tolerates "already exists" errors,
+      # so this is safe to leave on for repeated real runs.
+      initialize-schema: always
+  flyway:
+    locations: classpath:db/migration
+
+molit:
+  base-url: https://apis.data.go.kr/1613000/RTMSDataSvcAptTradeDev
+  service-key: ${MOLIT_SERVICE_KEY:}
+
+ingest:
+  run-on-startup: false
+  region-codes:
+    - "11110"
+    - "11140"
+  deal-yms:
+    - "202301"
+    - "202302"
