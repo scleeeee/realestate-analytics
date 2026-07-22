@@ -1,1 +1,7 @@
 .worktrees/
+.gradle/
+build/
+*.iml
+.idea/
+out/
+.env

@@ -1,0 +1,20 @@
+services:
+  mariadb:
+    image: mariadb:11.4
+    environment:
+      MARIADB_ROOT_PASSWORD: realestate
+      MARIADB_DATABASE: realestate
+      MARIADB_USER: realestate
+      MARIADB_PASSWORD: realestate
+    ports:
+      - "13306:3306"
+    volumes:
+      - mariadb-data:/var/lib/mysql
+
+  redis:
+    image: redis:7.4
+    ports:
+      - "16379:6379"
+
+volumes:
+  mariadb-data:
