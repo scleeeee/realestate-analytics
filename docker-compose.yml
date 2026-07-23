@@ -10,11 +10,62 @@ services:
       - "13306:3306"
     volumes:
       - mariadb-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-uroot", "-prealestate"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   redis:
     image: redis:7.4
     ports:
       - "16379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  ingest:
+    build:
+      context: .
+      dockerfile: ingest/Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/realestate
+      SPRING_DATASOURCE_USERNAME: realestate
+      SPRING_DATASOURCE_PASSWORD: realestate
+      INGEST_RUN_ON_STARTUP: "true"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    profiles: ["tools"]
+
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/realestate
+      SPRING_DATASOURCE_USERNAME: realestate
+      SPRING_DATASOURCE_PASSWORD: realestate
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    ports:
+      - "8081:80"
+    depends_on:
+      - api
 
 volumes:
   mariadb-data:
