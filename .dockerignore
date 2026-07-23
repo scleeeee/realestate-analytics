@@ -1,0 +1,9 @@
+.git
+.worktrees
+.idea
+.vscode
+docs
+**/build
+web/node_modules
+web/dist
+benchmark/node_modules
